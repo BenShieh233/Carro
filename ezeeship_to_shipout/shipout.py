@@ -2,19 +2,19 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
-import pandas as pd
 from IPython.display import display, Image
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 import os
 from selenium.common.exceptions import NoSuchElementException
 import time
+from run import read_args
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 options = webdriver.ChromeOptions()
 
 options.add_argument('--no-sandbox')
-options.add_argument('--headless')
+# options.add_argument('--headless')
 options.add_argument('--disable-gpu')
 options.add_argument('--disable-dve-shm-uage')
 prefs = {"download.default_directory": current_dir}
@@ -31,14 +31,7 @@ def wait_for_element(driver, selector, timeout=10):
         return None
 
 def wait_until_visible(driver, locator, timeout=10):
-    """
-    Wait until an element identified by 'locator' is visible.
 
-    Parameters:
-    - driver: WebDriver instance
-    - locator: tuple (By, locator_value) identifying the element
-    - timeout (optional): maximum time to wait (default: 10 seconds)
-    """
     wait = WebDriverWait(driver, timeout)
     element = wait.until(EC.visibility_of_element_located(locator))
     return element
@@ -60,16 +53,25 @@ def page_login(driver, username, password, url):
     warehouse_element.click()
 
     # Click on the parent element to expand the submenu
-    time.sleep(2)
-    parent_element = wait_for_element(driver, (By.XPATH, '//*[@id="app-root-wrap"]/section/aside/div/div[1]/div/ul/li[3]/div/div/div'))
-    parent_element.click() 
+    max_retries = 10
+    sleep_interval = 2
+    retries = 0
+    while retries < max_retries:
+        try:
+            parent_element = wait_for_element(driver, (By.XPATH, '//*[@id="app-root-wrap"]/section/aside/div/div[1]/div/ul/li[3]/div/div/div'))
+            parent_element.click()
+            rt = wait_for_element(driver, (By.XPATH, '//div[@class="ez-menu-item__content"]//span[contains(text(), "Return Order")]'))
+            rt.click()
+            print("已成功跳转至下一页面")
+            break
+        except:
+            retries +=1
+            print("当前页面请求失败，重试次数：", retries)
+            time.sleep(sleep_interval)
   
 
-    rt = wait_until_visible(driver, (By.XPATH, '//div[@class="ez-menu-item__content"]//span[contains(text(), "Return Order")]'))
-    rt.click()
-
 def export_table(driver):
-    export_button = driver.find_element(By.XPATH, '//*[@id="app-root-wrap"]/section/section/main/div/header/div/div[2]/div[2]/button')
+    export_button = wait_for_element(driver, (By.XPATH, '//*[@id="app-root-wrap"]/section/section/main/div/header/div/div[2]/div[2]/button'))
     export_button.click() 
 
     all_filtered = wait_for_element(driver, (By.XPATH, "//ul[contains(@id, 'dropdown-menu-')]/li[2][normalize-space()='Export All Filtered Orders']"))
@@ -77,39 +79,31 @@ def export_table(driver):
 
 
 def wait_for_file_download(prefix, timeout=100):
-    """
-    Wait until a file starting with 'prefix' is downloaded in the current directory.
 
-    Parameters:
-    - prefix: Prefix of the filename to search for.
-    - timeout (optional): Maximum time to wait in seconds (default: 100).
-
-    Returns:
-    - True if the file is found within the timeout period, False otherwise.
-    """
     end_time = time.time() + timeout
+    script_dir = os.path.dirname(os.path.abspath(__file__))
 
     while time.time() < end_time:
-        for filename in os.listdir('.'):
+        for filename in os.listdir(script_dir):
             if filename.startswith(prefix):
-                print(f"Found downloaded file: {filename}")
+                print(f"已查找到下载文件: {filename}")
                 return True
         time.sleep(1)  # Wait before checking again
 
-    print(f"Download timeout reached. File starting with '{prefix}' not found.")
+    print(f"下载超时，未能在当前目录找到以 '{prefix}' 为前缀的文件名")
     return False
 
 if __name__ == "__main__":
 
-    url = 'https://wms.shipout.com/z/#/dashboard'
+    params = read_args()
 
-    username = 'support@carrohome.com'
+    shipout_url = params.get('shipout_url')
+    shipout_username = params.get('shipout_username')
+    shipout_password = params.get('shipout_password')
 
-    password = 'Carrohome#23'
+    driver = webdriver.Chrome(options=options) 
 
-    driver = webdriver.Chrome(options=options) # options=options
-
-    page_login(driver, username, password, url)
+    page_login(driver, shipout_username, shipout_password, shipout_url)
 
     export_table(driver)
 

@@ -1,18 +1,18 @@
-from selenium.webdriver.common.keys import Keys
+# from selenium.webdriver.common.keys import Keys
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 import pandas as pd
-from IPython.display import display, Image
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 import os
-from selenium.common.exceptions import NoSuchElementException
+# from selenium.common.exceptions import NoSuchElementException
 import time
+from run import read_args
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 options = webdriver.ChromeOptions()
 options.add_argument('--no-sandbox')
-# options.add_argument('--headless')
+#options.add_argument('--headless')
 options.add_argument('--disable-gpu')
 options.add_argument('--disable-dve-shm-uage')
 prefs = {"download.default_directory": current_dir}
@@ -57,10 +57,10 @@ def advanced_search(driver, address):
     advanced_search = driver.find_element(By.XPATH, '//*[@id="app"]/div[1]/div[2]/div[2]/div/div/div/div[1]/div/div[2]/div[1]/section/i[1]')
     advanced_search.click()
 
-    address_input = wait_for_element(driver, (By.XPATH, '//*[@id="app"]/div[1]/div[2]/div[2]/div/div/div/div[1]/div/div[2]/section/div/form/div[3]/div[1]/div/div/div/input'))
+    address_input = wait_for_element(driver, (By.XPATH, '//*[@id="app"]/div[1]/div[2]/div[2]/div/div/div/div[1]/div/div[2]/section/div/form/div[2]/div[2]/div/div/div/input'))
     address_input.send_keys(str(address))
 
-    confirm = driver.find_element(By.XPATH, '//*[@id="app"]/div[1]/div[2]/div[2]/div/div/div/div[1]/div/div[2]/section/div/div/button[1]')
+    confirm = wait_for_element(driver, (By.XPATH, '//*[@id="app"]/div[1]/div[2]/div[2]/div/div/div/div[1]/div/div[2]/section/div/div/button[1]'))
     confirm.click()
 
 def export_table(driver):
@@ -72,20 +72,19 @@ def export_table(driver):
         by_order = wait_for_element(driver, (By.XPATH, "//ul[contains(@id, 'dropdown-menu-')]/li[1]/span[contains(text(), 'By Order')]"))
         by_order.click()
     except:
-        print("failed to export")
+        print("导出文件失败")
 
 if __name__ == "__main__":
 
-    
-    url = 'https://ezeeship.com/newstyle/#/accredit/login'
+    params = read_args()
 
-    username = 'jacksoneatvivi@gmail.com'
-    
-    password = 'Carrohome#1'
+    ezeeship_url = params.get('ezeeship_url')
+    ezeeship_username = params.get('ezeeship_username')
+    ezeeship_password = params.get('ezeeship_password')
 
     driver = webdriver.Chrome(options = options)
     
-    page_login(driver, username, password, url)
+    page_login(driver, ezeeship_username, ezeeship_password, ezeeship_url)
 
     in_transit(driver)
 
@@ -98,14 +97,13 @@ if __name__ == "__main__":
     # Wait for the file to be downloaded
     timeout = 120  # Timeout in seconds
     end_time = time.time() + timeout
-
     while time.time() < end_time:
-        if expected_filename in os.listdir('.'):  # Check the current directory
-            print("File downloaded successfully.")
+        if expected_filename in os.listdir(current_dir):  # Check the current directory
+            print("成功下载文件")
             break
         time.sleep(1)
 
-    # driver.quit()
+    driver.quit()
 
     
 
