@@ -10,7 +10,7 @@ from webdriver import wait_for_element
 current_dir = os.path.dirname(os.path.abspath(__file__))
 options = webdriver.ChromeOptions()
 options.add_argument('--no-sandbox')
-options.add_argument('--headless')
+# options.add_argument('--headless')
 options.add_argument('--disable-gpu')
 options.add_argument('--disable-dve-shm-uage')
 prefs = {"download.default_directory": current_dir}
@@ -24,10 +24,12 @@ def page_login(driver, username, password, url):
 
     password_element =driver.find_element(By.CSS_SELECTOR, 'input[type="password"][autocomplete="password"].el-input__inner')
     password_element.send_keys(password)
+
+    time.sleep(2)
     try:
         button = wait_for_element(driver, (By.CSS_SELECTOR, 'button[data-v-1915e4d0][type="submit"].el-button.login-submit-button'))
         button.click()
-        print("已成功登陆EzeeShip")
+        print("已成功登录EzeeShip")
     except:
         print("EzeeShip账号或密码输入错误，请重新输入")
         driver.quit()
@@ -39,13 +41,19 @@ def in_transit(driver):
     shipments_element.click()
     print("EzeeShip - 已成功转入“Shipment”页面")
 
+    time.sleep(2)
+
     in_transit_element =  wait_for_element(driver, (By.XPATH, '//span[contains(text(), "In Transit")]'))
     in_transit_element.click()
     print("EzeeShip - 选择“In Transit”订单")
 
+    time.sleep(2)
+
     all_element = wait_for_element(driver, (By.XPATH, '//*[@id="app"]/div[1]/div[2]/div[1]/ul/div/li[3]/ul/div/li[1]/span'))
     all_element.click()
     print('EzeeShip - 点击“All”')
+
+    time.sleep(2)
 
 def advanced_search(driver, address):
 
@@ -53,17 +61,25 @@ def advanced_search(driver, address):
     advanced_search.click()
     print('EzeeShip - 进入Advanced Search')
 
+    time.sleep(2)
+
     address_input = wait_for_element(driver, (By.XPATH, '//*[@id="app"]/div[1]/div[2]/div[2]/div/div/div/div[1]/div/div[2]/section/div/form/div[2]/div[2]/div/div/div/input'))
     address_input.send_keys(address)
     print('EzeeShip - 输入“Recipient Address"仓库地址：', address)
+
+    time.sleep(2)
 
     confirm = wait_for_element(driver, (By.XPATH, '//*[@id="app"]/div[1]/div[2]/div[2]/div/div/div/div[1]/div/div[2]/section/div/div/button[1]'))
     confirm.click()
     print('EzeeShip - 点击确认')
 
+    time.sleep(2)
+
 def export_table(driver):
     export_button = driver.find_element(By.XPATH, '//*[@id="app"]/div[1]/div[2]/div[2]/div/div/div/div[1]/div/div[1]/div[1]/div[1]/div[7]/div/div/button')
     export_button.click()
+
+    time.sleep(2)
 
     try:
 

@@ -9,7 +9,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 options = webdriver.ChromeOptions()
 
 options.add_argument('--no-sandbox')
-# options.add_argument('--headless')
+options.add_argument('--headless')
 options.add_argument('--disable-gpu')
 options.add_argument('--disable-dve-shm-uage')
 prefs = {"download.default_directory": current_dir}
@@ -17,23 +17,23 @@ options.add_experimental_option("prefs", prefs)
 
 def page_login(driver, username, password, url):
     driver.get(url)
-    time.sleep(2)
+    
     username_element = driver.find_element(By.CLASS_NAME, 'ez-input__inner')
     username_element.send_keys(username)
-    time.sleep(2)
+    
     password_element = driver.find_element(By.XPATH, '//input[@type="password" and @autocomplete="off" and contains(@class, "ez-input__inner")]')
     password_element.send_keys(password)
 
-    time.sleep(2)
+    
     try:
         button = wait_for_element(driver, (By.CSS_SELECTOR, '.ez-button.login-submit.ez-button--primary.ez-button--medium'))
         button.click()
-        print("已成功登陆Shipout")
+        print("已成功登录Shipout")
 
     except:
         print("Shipout账号或密码输入错误，请重新输入")
         driver.quit()
-    time.sleep(2)
+    
     warehouse_element = wait_for_element(driver, (By.XPATH, '//div[contains(text(), "Upland，CA")]'))
     warehouse_element.click()
 
@@ -59,7 +59,6 @@ def page_login(driver, username, password, url):
   
 
 def export_table(driver):
-    time.sleep(2)
     max_retries = 10
     sleep_interval = 2
     retries = 0
@@ -67,17 +66,17 @@ def export_table(driver):
         try: 
             all_button = wait_for_element(driver, (By.XPATH, '//*[@id="tab-0"]'))
             all_button.click()
-            time.sleep(2)
+            
             print("Shipout - 已选择查看“全部”退货单，正在尝试导出所有表格")
 
             export_button = wait_for_element(driver, (By.XPATH, '//*[@id="app-root-wrap"]/section/section/main/div/header/div/div[2]/div[2]/button'))
             export_button.click()
             print("Shipout - 已选择“导出”")
-            time.sleep(2)
+            
 
             all_filtered = wait_for_element(driver, (By.XPATH, "//ul[contains(@id, 'dropdown-menu-')]/li[2][normalize-space()='Export All Filtered Orders' or normalize-space()='导出当前所有数据']"))
             all_filtered.click()
-            time.sleep(2)
+            
             print("Shipout - 已选择“导出当前所有数据”")
             print("Shipout - 已导出退货单表格")
             break

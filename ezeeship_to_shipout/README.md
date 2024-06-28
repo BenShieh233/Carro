@@ -5,15 +5,21 @@
   - [项目结构](#项目结构)
   - [脚本文件说明](#脚本文件说明)
     - [webdriver.py](#webdriverpy)
-      - [1. wait\_for\_element()](#1-wait_for_element)
-      - [2. wait\_until\_visible()](#2-wait_until_visible)
+      - [1. wait\_for\_element()：在设定时间内查找页面元素](#1-wait_for_element在设定时间内查找页面元素)
+      - [2. wait\_until\_visible()：在设定时间内等待页面元素可见](#2-wait_until_visible在设定时间内等待页面元素可见)
     - [shipout.py](#shipoutpy)
-      - [1. page\_login()](#1-page_login)
-      - [2. export\_table()](#2-export_table)
-      - [3. wait\_for\_file\_download()](#3-wait_for_file_download)
-      - [4. shipout\_driver()](#4-shipout_driver)
+      - [1. page\_login()：登录Shipout并跳转到对应页面](#1-page_login登录shipout并跳转到对应页面)
+      - [2. export\_table()：导出表格数据](#2-export_table导出表格数据)
+      - [3. wait\_for\_file\_download()：检索文件是否已下载](#3-wait_for_file_download检索文件是否已下载)
+      - [4. shipout\_driver()：统一执行所有步骤](#4-shipout_driver统一执行所有步骤)
       - [5. 动图示例](#5-动图示例)
     - [EzeeShip.py](#ezeeshippy)
+      - [1. page\_login()：用于登录EzeeShip用户页面](#1-page_login用于登录ezeeship用户页面)
+      - [2. in\_transit()：用于跳转进入“In Transit”在途退货单页面](#2-in_transit用于跳转进入in-transit在途退货单页面)
+      - [3. advanced\_search()：在高级检索中输入收件人地址筛选退货单](#3-advanced_search在高级检索中输入收件人地址筛选退货单)
+      - [4. export\_table()：导出EzeeShip中的退货订单数据并生成Excel表格](#4-export_table导出ezeeship中的退货订单数据并生成excel表格)
+      - [5. ezeeship\_driver()：统一执行所有步骤](#5-ezeeship_driver统一执行所有步骤)
+      - [6. 动图示例](#6-动图示例)
 
 ## 项目结构
 确保项目结构如下：
@@ -35,12 +41,11 @@ main/
 ### webdriver.py
 用于控制脚本访问页面上某个元素的进程。具体来说，它包括了两种访问函数，`wait_for_element（driver, selector, timout）`与`wait_until_visible(driver, locator, timeout)`，以下是这两种函数的详细功能：
 
-#### 1. wait_for_element()
-
+#### 1. wait_for_element()：在设定时间内查找页面元素
 <details>
   <summary>展开查看代码</summary>
 
-```
+```python
 def wait_for_element(driver, selector, timeout=10):
     try:
         element = WebDriverWait(driver, timeout).until(
@@ -58,14 +63,11 @@ def wait_for_element(driver, selector, timeout=10):
 </details>
 
 _________________
-
-
-#### 2. wait_until_visible()
-
+#### 2. wait_until_visible()：在设定时间内等待页面元素可见
 <details>
   <summary>展开查看代码</summary>
 
-```
+```python
 def wait_until_visible(driver, locator, timeout=10):
     try:
         wait = WebDriverWait(driver, timeout)
@@ -85,12 +87,11 @@ _________________
 ### shipout.py  
 用于执行Shipout中导出退货订单的功能。包括登录、导航到退货管理页面、导出数据以及下载 Excel 表格等步骤。以下为各函数的具体功能：
 
-#### 1. page_login()
-
+#### 1. page_login()：登录Shipout并跳转到对应页面
 <details>
   <summary>展开查看代码</summary>
 
-```
+```python
 def page_login(driver, username, password, url):
     driver.get(url)
 
@@ -104,7 +105,7 @@ def page_login(driver, username, password, url):
     try:
         button = wait_for_element(driver, (By.CSS_SELECTOR, '.ez-button.login-submit.ez-button--primary.ez-button--medium'))
         button.click()
-        print("已成功登陆Shipout")
+        print("已成功登录Shipout")
 
     except:
         print("Shipout账号或密码输入错误，请重新输入")
@@ -138,14 +139,11 @@ def page_login(driver, username, password, url):
 </details>
 
 _________________
-
-
-#### 2. export_table()
-
+#### 2. export_table()：导出表格数据
 <details>
   <summary>展开查看代码</summary>
 
-```
+```python
 def export_table(driver):
     max_retries = 10
     sleep_interval = 2
@@ -178,14 +176,11 @@ def export_table(driver):
 </details>
 
 _________________
-
-
-#### 3. wait_for_file_download()
-
+#### 3. wait_for_file_download()：检索文件是否已下载
 <details>
   <summary>展开查看代码</summary>
 
-```
+```python
 def wait_for_file_download(prefix, timeout=100):
 
     end_time = time.time() + timeout
@@ -207,14 +202,11 @@ def wait_for_file_download(prefix, timeout=100):
 </details>
 
 _________________
-
-
-#### 4. shipout_driver()
-
+#### 4. shipout_driver()：统一执行所有步骤
 <details>
   <summary>展开查看代码</summary>
 
-```
+```python
 def shipout_driver():
 
     params = read_args()
@@ -241,8 +233,8 @@ def shipout_driver():
 
 _________________
 
-
 #### 5. 动图示例
+
 以下为<u>**shipout.py**</u>的自动操作动图示例：
 <div style="text-align: center;">
   <img src="Shipout演示.gif" alt="Shipout.py">
@@ -251,6 +243,150 @@ _________________
 _________________
 
 ### EzeeShip.py
+用于执行从EzeeShip中导出退货订单的功能。包括登录、导航到Shipments-In Transit页面、设置高级检索，导出数据以及下载 Excel 表格等步骤。以下为各函数的具体功能：
 
+#### 1. page_login()：用于登录EzeeShip用户页面
+<details>
+  <summary>展开查看代码</summary>
 
-  
+```python
+def page_login(driver, username, password, url):
+    driver.get(url)
+
+    username_element =driver.find_element(By.CSS_SELECTOR, 'input[type="text"][autocomplete="username"].el-input__inner')
+    username_element.send_keys(username)
+
+    password_element =driver.find_element(By.CSS_SELECTOR, 'input[type="password"][autocomplete="password"].el-input__inner')
+    password_element.send_keys(password)
+    try:
+        button = wait_for_element(driver, (By.CSS_SELECTOR, 'button[data-v-1915e4d0][type="submit"].el-button.login-submit-button'))
+        button.click()
+        print("已成功登录EzeeShip")
+    except:
+        print("EzeeShip账号或密码输入错误，请重新输入")
+        driver.quit()
+```
+
+- `page_login(driver, username, password, url)`：用于访问Shipout登录界面并输入用户名和密码，选择仓库地址，以及跳转至“退货管理-退货单”页面。
+    - `driver`： WebDriver实例，通常用于控制浏览器
+    - `username`：用于登录EzeeShip的用户名，读取自<u>**args.txt**</u>
+    - `password`：用于登录EzeeShip的密码，读取自<u>**args.txt**</u>
+    - `url`：EzeeShip用户登录界面网址
+
+</details>
+
+_________________
+#### 2. in_transit()：用于跳转进入“In Transit”在途退货单页面
+<details>
+  <summary>展开查看代码</summary>
+
+```python
+def in_transit(driver):
+
+    shipments_element = wait_for_element(driver, (By.XPATH, '//span[contains(text(), "Shipments")]'))
+    shipments_element.click()
+    print("EzeeShip - 已成功转入“Shipment”页面")
+
+    in_transit_element =  wait_for_element(driver, (By.XPATH, '//span[contains(text(), "In Transit")]'))
+    in_transit_element.click()
+    print("EzeeShip - 选择“In Transit”订单")
+
+    all_element = wait_for_element(driver, (By.XPATH, '//*[@id="app"]/div[1]/div[2]/div[1]/ul/div/li[3]/ul/div/li[1]/span'))
+    all_element.click()
+    print('EzeeShip - 点击“All”')
+
+```
+- `in_transit(driver)`：依次操作浏览器点击“Shipment”选项，在进入页面后点击网页左侧目录的“In Transit"选项，最后点击下拉目录中的“All”选项，调出所有在途退货单数据。  
+
+</details>
+
+#### 3. advanced_search()：在高级检索中输入收件人地址筛选退货单
+<details>
+  <summary>展开查看代码</summary>
+
+```python
+def advanced_search(driver, address):
+
+    advanced_search = driver.find_element(By.XPATH, '//*[@id="app"]/div[1]/div[2]/div[2]/div/div/div/div[1]/div/div[2]/div[1]/section/i[1]')
+    advanced_search.click()
+    print('EzeeShip - 进入Advanced Search')
+
+    address_input = wait_for_element(driver, (By.XPATH, '//*[@id="app"]/div[1]/div[2]/div[2]/div/div/div/div[1]/div/div[2]/section/div/form/div[2]/div[2]/div/div/div/input'))
+    address_input.send_keys(address)
+    print('EzeeShip - 输入“Recipient Address"仓库地址：', address)
+
+    confirm = wait_for_element(driver, (By.XPATH, '//*[@id="app"]/div[1]/div[2]/div[2]/div/div/div/div[1]/div/div[2]/section/div/div/button[1]'))
+    confirm.click()
+    print('EzeeShip - 点击确认')
+
+```
+- `advanced_search(driver, address)`：点击页面上“Advanced Search”的选项，在“Recipient”一栏输入对应仓库的收件人地址（如Upland是“1037”），并点击“Confirm”实现筛选对应退货单。
+    - `address`是仓库的收货地址，如“Upland”仓库为1037，该地址需使用者在<u>**args.txt**</u>文件中的“ezeeship_recipient_address”一栏手动修改。
+</details>
+
+_________________
+#### 4. export_table()：导出EzeeShip中的退货订单数据并生成Excel表格
+<details>
+  <summary>展开查看代码</summary>
+
+```python
+def export_table(driver):
+    export_button = driver.find_element(By.XPATH, '//*[@id="app"]/div[1]/div[2]/div[2]/div/div/div/div[1]/div/div[1]/div[1]/div[1]/div[7]/div/div/button')
+    export_button.click()
+
+    try:
+
+        by_order = wait_for_element(driver, (By.XPATH, "//ul[contains(@id, 'dropdown-menu-')]/li[1]/span[contains(text(), 'By Order')]"))
+        by_order.click()
+        print('EzeeShip - 选择“By Order”，正在尝试导出文件')
+    except:
+        print("EzeeShip - 导出文件失败")
+```
+
+- `export_table(driver)`：操作浏览器点击页面上方的“Export Shipment Info”选项，并选择“By Order”，生成所有在途退货单的Excel表格。
+</details>
+
+_________________
+#### 5. ezeeship_driver()：统一执行所有步骤
+<details>
+  <summary>展开查看代码</summary>
+
+```python
+def ezeeship_driver():
+
+    params = read_args()
+
+    ezeeship_url = params.get('ezeeship_url')
+    ezeeship_username = params.get('ezeeship_username')
+    ezeeship_password = params.get('ezeeship_password')
+    ezeeship_address = params.get('ezeeship_recipient_address')
+
+    driver = webdriver.Chrome(options = options)
+    
+    page_login(driver, ezeeship_username, ezeeship_password, ezeeship_url)
+
+    in_transit(driver)
+
+    advanced_search(driver, ezeeship_address)
+
+    export_table(driver)
+
+    prefix = "Shipment_Information(by order)(all).xls"
+
+    wait_for_file_download(prefix)
+
+    driver.quit()
+```
+- `ezeeship_driver()`：读取同路径内<u>**args.txt**</u>内的登录账户名和密码，执行上述所有操作，并退出浏览器控制。
+</details>
+
+_________________
+
+#### 6. 动图示例
+以下为<u>**EzeeShip.py**</u>的自动操作动图示例：
+<div style="text-align: center;">
+  <img src="EzeeShip演示.gif" alt="EzeeShip.py">
+</div>
+
+_________________
+
