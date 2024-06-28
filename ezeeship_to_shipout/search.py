@@ -51,11 +51,13 @@ def read_xls(prefix):
     else:
         print(f"未找到以 '{prefix}'为前缀的文件名")
         return None
+
     
 def check_value(df1, df2):
     def is_contained(order_no):
-        return any(order_no in str(rma) for rma in df2['RMA #'])
-    
+        order_no_lower = order_no.lower() # 统一把"-return"后缀转为小写
+        return any(order_no_lower in str(rma).lower() for rma in df2['RMA #'])
+    # 找到已经登记在df1但没有登记到df2的订单编号
     mask = df1['Order No'].apply(lambda x: not is_contained(x))
     missing_values_df = df1[mask][['Order No', 'Tracking ID', 'Reference', 'Reference2']]
     return missing_values_df

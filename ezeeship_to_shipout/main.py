@@ -1,6 +1,6 @@
 from EzeeShip import ezeeship_driver
 from shipout import shipout_driver
-from run import delete_files_starting_with, read_args, read_xls, check_value, get_script_directory
+from search import delete_files_starting_with, read_xls, check_value, get_script_directory
 import threading
 from tabulate import tabulate
 import os
@@ -12,7 +12,7 @@ if __name__ == "__main__":
 
     delete_files_starting_with(ezeeship_prefix)
     delete_files_starting_with(shipout_prefix)
-    delete_files_starting_with('未登记订单（In Transit）')
+    delete_files_starting_with('未登记订单')
 
     # Create threads for each function
     thread1 = threading.Thread(target=ezeeship_driver)
