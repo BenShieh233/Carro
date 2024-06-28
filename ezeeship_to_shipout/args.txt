@@ -9,3 +9,5 @@ ezeeship_url = https://ezeeship.com/newstyle/#/accredit/login
 ezeeship_username = jacksoneatvivi@gmail.com
 
 ezeeship_password = Carrohome#1
+
+ezeeship_recipient_address = 1037
