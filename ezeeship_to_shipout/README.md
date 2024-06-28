@@ -13,6 +13,7 @@
       - [3. wait\_for\_file\_download()](#3-wait_for_file_download)
       - [4. shipout\_driver()](#4-shipout_driver)
       - [5. 动图示例](#5-动图示例)
+    - [EzeeShip.py](#ezeeshippy)
 
 ## 项目结构
 确保项目结构如下：
@@ -56,6 +57,9 @@ def wait_for_element(driver, selector, timeout=10):
   - `timeout`：这是等待该元素出现的最长时间，如果未能等到该元素加载完成，将会抛出超时异常。
 </details>
 
+_________________
+
+
 #### 2. wait_until_visible()
 
 <details>
@@ -74,6 +78,9 @@ def wait_until_visible(driver, locator, timeout=10):
 - `wait_until_visible(driver, locator, timeout)`：功能同上，用于等待页面上某个元素变得可见，并在元素可见后执行操作（例如点击）。输入参数与`wait_for_element()`功能一致
 
 </details>
+
+_________________
+
 
 ### shipout.py  
 用于执行Shipout中导出退货订单的功能。包括登录、导航到退货管理页面、导出数据以及下载 Excel 表格等步骤。以下为各函数的具体功能：
@@ -130,6 +137,9 @@ def page_login(driver, username, password, url):
 - `page_login(driver, username, password, url)`：用于访问Shipout登录界面并输入用户名和密码，选择仓库地址，以及跳转至“退货管理-退货单”页面。
 </details>
 
+_________________
+
+
 #### 2. export_table()
 
 <details>
@@ -167,6 +177,8 @@ def export_table(driver):
 - `export_table(driver)`：定位至“全部”退货单页面并导出所有数据。由于该页面加载所需时间较长，可能会导致导出文件的请求失败。在这种情况下，该函数会重复执行并记录失败次数直至导出文件，若请求超时，请联系技术人员处理。
 </details>
 
+_________________
+
 
 #### 3. wait_for_file_download()
 
@@ -193,6 +205,9 @@ def wait_for_file_download(prefix, timeout=100):
   - `prefix`：读取该路径内文件的前缀，如“WMS_Return_Export”为Shipout输出文件的固定前缀。
   - 
 </details>
+
+_________________
+
 
 #### 4. shipout_driver()
 
@@ -224,11 +239,18 @@ def shipout_driver():
 - `shipout_driver()`：读取同路径内<u>**args.txt**</u>内的登录账户名和密码，执行上述所有操作，并退出浏览器控制。
 </details>
 
+_________________
+
+
 #### 5. 动图示例
 以下为<u>**shipout.py**</u>的自动操作动图示例：
 <div style="text-align: center;">
   <img src="Shipout演示.gif" alt="Shipout.py">
 </div>
+
+_________________
+
+### EzeeShip.py
 
 
   
