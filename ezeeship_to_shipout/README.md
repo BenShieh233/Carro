@@ -25,6 +25,8 @@
       - [2. read\_args()：读取指定路径下名为“args.txt”的文件并返回其键值对应的字典](#2-read_args读取指定路径下名为argstxt的文件并返回其键值对应的字典)
       - [3. delete\_files\_starting\_with()：删除路径内拥有指定前缀的所有文件](#3-delete_files_starting_with删除路径内拥有指定前缀的所有文件)
       - [4. read\_xls()：查找当前脚本所在目录中的 Excel 文件并将其读取为 DataFrame](#4-read_xls查找当前脚本所在目录中的-excel-文件并将其读取为-dataframe)
+      - [5. check\_value()：查找已在EzeeShip表格但没有登记到Shipout表格的退货单编号](#5-check_value查找已在ezeeship表格但没有登记到shipout表格的退货单编号)
+    - [main.py](#mainpy)
 
 
 ## 项目结构
@@ -99,46 +101,57 @@ _________________
 
 ```python
 def page_login(driver, username, password, url):
+    # 打开给定的 URL
     driver.get(url)
 
+    # 找到并填写用户名
     username_element = driver.find_element(By.CLASS_NAME, 'ez-input__inner')
     username_element.send_keys(username)
 
+    # 找到并填写密码
     password_element = driver.find_element(By.XPATH, '//input[@type="password" and @autocomplete="off" and contains(@class, "ez-input__inner")]')
     password_element.send_keys(password)
 
-
     try:
+        # 找到并点击登录按钮
         button = wait_for_element(driver, (By.CSS_SELECTOR, '.ez-button.login-submit.ez-button--primary.ez-button--medium'))
         button.click()
         print("已成功登录Shipout")
-
     except:
+        # 登录失败处理
         print("Shipout账号或密码输入错误，请重新输入")
         driver.quit()
 
+    # 选择仓库
     warehouse_element = wait_for_element(driver, (By.XPATH, '//div[contains(text(), "Upland，CA")]'))
     warehouse_element.click()
 
-    # Click on the parent element to expand the submenu
-    max_retries = 10
-    sleep_interval = 2
-    retries = 0
+    # 展开子菜单并跳转至“退货管理-退货单”页面
+    max_retries = 10  # 最大重试次数
+    sleep_interval = 2  # 重试间隔时间（秒）
+    retries = 0  # 当前重试次数
+
     while retries < max_retries:
         try:
+            # 找到并点击父菜单
             parent_element = wait_for_element(driver, (By.XPATH, '//*[@id="app-root-wrap"]/section/aside/div/div[1]/div/ul/li[3]/div/div/div'))
             parent_element.click()
-            rt = wait_for_element(driver, (By.XPATH, '/html/body/div[2]/ul/li[1]/div/span')) #'//div[@class="ez-menu-item__content"]//span[contains(text(), "Return Order")]'
+
+            # 找到并点击子菜单
+            rt = wait_for_element(driver, (By.XPATH, '/html/body/div[2]/ul/li[1]/div/span'))
             rt.click()
             print("Shipout - 已成功跳转至“退货管理-退货单”页面")
-            break
+            break  # 成功跳转后跳出循环
         except:
-            retries +=1
+            # 请求失败处理
+            retries += 1
             print("Shipout - 当前页面请求失败，重试次数：", retries)
             time.sleep(sleep_interval)
     else:
+        # 超时处理
         print("Shipout - 页面请求已超时，请重新执行文件")
         driver.quit()
+
 ```
 
 - `page_login(driver, username, password, url)`：用于访问Shipout登录界面并输入用户名和密码，选择仓库地址，以及跳转至“退货管理-退货单”页面。
@@ -151,31 +164,36 @@ _________________
 
 ```python
 def export_table(driver):
-    max_retries = 10
-    sleep_interval = 2
-    retries = 0
+    max_retries = 10  # 最大重试次数
+    sleep_interval = 2  # 重试间隔时间（秒）
+    retries = 0  # 当前重试次数
+
     while retries < max_retries:
         try: 
+            # 找到并点击“全部”按钮
             all_button = wait_for_element(driver, (By.XPATH, '//*[@id="tab-0"]'))
             all_button.click()
             print("Shipout - 已选择查看“全部”退货单，正在尝试导出所有表格")
 
+            # 找到并点击“导出”按钮
             export_button = wait_for_element(driver, (By.XPATH, '//*[@id="app-root-wrap"]/section/section/main/div/header/div/div[2]/div[2]/button'))
             export_button.click()
             print("Shipout - 已选择“导出”")
 
+            # 找到并点击“导出当前所有数据”选项
             all_filtered = wait_for_element(driver, (By.XPATH, "//ul[contains(@id, 'dropdown-menu-')]/li[2][normalize-space()='Export All Filtered Orders' or normalize-space()='导出当前所有数据']"))
             all_filtered.click()
             print("Shipout - 已选择“导出当前所有数据”")
             print("Shipout - 已导出退货单表格")
-            break
-        except:
-            retries +=1
+            break  # 成功导出后跳出循环
+        except Exception as e:
+            retries += 1
             print("Shipout - 请求失败，正在尝试重新下载表格，重试次数：", retries)
             time.sleep(sleep_interval)
     else:
         print("Shipout - 页面请求已超时，请重新执行文件")   
-        driver.quit() 
+        driver.quit()  # 超时后关闭浏览器
+
 ```
 
 - `export_table(driver)`：定位至“全部”退货单页面并导出所有数据。由于该页面加载所需时间较长，可能会导致导出文件的请求失败。在这种情况下，该函数会重复执行并记录失败次数直至导出文件，若请求超时，请联系技术人员处理。
@@ -188,19 +206,24 @@ _________________
 
 ```python
 def wait_for_file_download(prefix, timeout=100):
-
+    # 计算超时时间点
     end_time = time.time() + timeout
+    # 获取当前脚本所在目录
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
     while time.time() < end_time:
+        # 遍历当前目录下的所有文件
         for filename in os.listdir(script_dir):
+            # 检查文件名是否以指定前缀开头
             if filename.startswith(prefix):
                 print(f"Shipout - 已查找到下载文件: {filename}")
                 return True
-        time.sleep(1)  # Wait before checking again
+        # 等待一秒钟后再检查
+        time.sleep(1)
 
     print(f"Shipout - 下载超时，未能在当前目录找到以 '{prefix}' 为前缀的文件名")
     return False
+
 ```
 - `wait_for_file_download(prefix, timeout=100)`：遍历当前路径内文件，查询是否已下载生成的Excel表格。
   - `prefix`：读取该路径内文件的前缀，如“WMS_Return_Export”为Shipout输出文件的固定前缀。
@@ -214,23 +237,30 @@ _________________
 
 ```python
 def shipout_driver():
-
+    # 读取参数
     params = read_args()
 
+    # 获取 Shipout URL、用户名和密码
     shipout_url = params.get('shipout_url')
     shipout_username = params.get('shipout_username')
     shipout_password = params.get('shipout_password')
 
+    # 初始化 Chrome 浏览器
     driver = webdriver.Chrome(options=options) 
 
+    # 登录页面
     page_login(driver, shipout_username, shipout_password, shipout_url)
 
+    # 导出表格
     export_table(driver)
 
+    # 文件前缀
     prefix = "WMS_Return_Export"
 
+    # 等待文件下载
     wait_for_file_download(prefix)
 
+    # 退出浏览器
     driver.quit()
 ```
 
@@ -360,28 +390,37 @@ _________________
 
 ```python
 def ezeeship_driver():
-
+    # 读取参数文件中的配置
     params = read_args()
 
+    # 获取EzeeShip的相关参数
     ezeeship_url = params.get('ezeeship_url')
     ezeeship_username = params.get('ezeeship_username')
     ezeeship_password = params.get('ezeeship_password')
     ezeeship_address = params.get('ezeeship_recipient_address')
 
-    driver = webdriver.Chrome(options = options)
-    
+    # 启动Chrome浏览器
+    driver = webdriver.Chrome(options=options)
+
+    # 登录到EzeeShip页面
     page_login(driver, ezeeship_username, ezeeship_password, ezeeship_url)
 
+    # 进入在途页面
     in_transit(driver)
 
+    # 执行高级搜索
     advanced_search(driver, ezeeship_address)
 
+    # 导出表格数据
     export_table(driver)
 
+    # 定义文件前缀
     prefix = "Shipment_Information(by order)(all).xls"
 
+    # 等待文件下载完成
     wait_for_file_download(prefix)
 
+    # 关闭浏览器
     driver.quit()
 ```
 - `ezeeship_driver()`：读取同路径内<u>**args.txt**</u>内的登录账户名和密码，执行上述所有操作，并退出浏览器控制。
@@ -418,17 +457,23 @@ _________________
   <summary>展开查看代码</summary>
 
 ```python
-def read_args(file_path = None):
+def read_args(file_path=None):
+    # 如果没有指定文件路径，使用默认路径 'args.txt'
     if file_path is None:
         file_path = os.path.join(get_script_directory(), 'args.txt')
+    
     params = {}
+    
+    # 打开文件并读取每一行
     with open(file_path, 'r') as file:
         for line in file:
-            line = line.strip()
+            line = line.strip()  # 去掉每行两端的空白字符
             if line:
-                key, value = line.split(' = ', 1)
-                params[key] = value
-    return params 
+                key, value = line.split(' = ', 1)  # 按照 ' = ' 分割每一行，最多分割一次
+                params[key] = value  # 将键值对存入字典中
+    
+    return params
+
 ```
 - `read_args(file_path = None)`：指定默认文件路径为当前所在文件夹 + 'args.txt'，返回字典。其效果如下：
 ```
@@ -520,3 +565,73 @@ def read_xls(prefix):
 </details>
 
 _________________
+
+#### 5. check_value()：查找已在EzeeShip表格但没有登记到Shipout表格的退货单编号
+<details>
+  <summary>展开查看代码</summary>
+
+```python
+def check_value(df1, df2):
+    def is_contained(order_no):
+        order_no_lower = order_no.lower() # 统一把"-return"后缀转为小写
+        return any(order_no_lower in str(rma).lower() for rma in df2['RMA #'])
+    # 找到已经登记在df1但没有登记到df2的订单编号
+    mask = df1['Order No'].apply(lambda x: not is_contained(x))
+    missing_values_df = df1[mask][['Order No', 'Tracking ID', 'Reference', 'Reference2']]
+    return missing_values_df
+
+```
+- `check_value(df1, df2)`：查找已在EzeeShip表格中登记，但并未在Shipout表格中登记退货单编号，并生成名为`missing_values_df`的DataFrame。
+  - `is_contained(order_no)`：将所有退货单编号的后缀“-Return”统一转为小写以方便比对，并通过内置函数`any()`，判断df1表格中每一行编号是否同时存在于df2表格中，并返回布尔值。
+  - `df1`：储存表格的变量名，此处为Ezeeship生成的Excel表格
+  - `df2`：储存Shipout表格的变量名
+</details>
+
+_________________
+
+
+### main.py
+脚本的主要执行文件。执行一系列操作以删除旧文件、运行两个独立的功能模块（ezeeship_driver 和 shipout_driver），读取生成的Excel文件，并检查退货单编号在两个数据集中是否存在，然后将未登记的编号写入到一个文本文件中。
+
+<details>
+  <summary>展开查看代码</summary>
+
+```python
+ezeeship_prefix = "Shipment_Information(by order)(all)"
+shipout_prefix = "WMS_Return_Export"
+
+if __name__ == "__main__":
+
+    # 删除旧文件
+    delete_files_starting_with(ezeeship_prefix)
+    delete_files_starting_with(shipout_prefix)
+    delete_files_starting_with('未登记订单')
+
+    # 创建线程来运行 ezeeship_driver 和 shipout_driver 函数
+    thread1 = threading.Thread(target=ezeeship_driver)
+    thread2 = threading.Thread(target=shipout_driver)
+
+    # 启动线程
+    thread1.start()
+    thread2.start()
+
+    # 等待两个线程都完成
+    thread1.join()
+    thread2.join()
+    
+    # 读取生成的Excel文件
+    ezeeship_df = read_xls(ezeeship_prefix)
+    shipout_df = read_xls(shipout_prefix)
+
+    # 获取脚本目录路径      
+    script_dir = get_script_directory()
+    file_path =  os.path.join(script_dir, '未登记订单.txt')
+
+    # 将未登记的订单写入到文本文件
+    with open(file_path, 'w') as file:
+        file.write(tabulate(check_value(ezeeship_df, shipout_df), headers = 'keys', tablefmt='grid'))
+    print('已打印所有未登记订单')
+  
+  ```
+  </details>
+
