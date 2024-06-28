@@ -60,6 +60,11 @@ def check_value(df1, df2):
     missing_values_df = df1[mask][['Order No', 'Tracking ID', 'Reference', 'Reference2']]
     return missing_values_df
 
+if __name__ == "__main__":
+    script_dir = get_script_directory()
+    print(read_args())
+
+
 # if __name__ == "__main__":
 
 #     ezeeship_prefix = "Shipment_Information(by order)(all)"

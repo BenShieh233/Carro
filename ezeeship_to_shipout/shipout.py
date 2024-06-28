@@ -2,7 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 import os
 import time
-from run import read_args
+from search import read_args
 from webdriver import wait_for_element, wait_until_visible
 
 current_dir = os.path.dirname(os.path.abspath(__file__))

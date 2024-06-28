@@ -20,6 +20,11 @@
       - [4. export\_table()：导出EzeeShip中的退货订单数据并生成Excel表格](#4-export_table导出ezeeship中的退货订单数据并生成excel表格)
       - [5. ezeeship\_driver()：统一执行所有步骤](#5-ezeeship_driver统一执行所有步骤)
       - [6. 动图示例](#6-动图示例)
+    - [search.py](#searchpy)
+      - [1. get\_script\_directory()：读取当前文件所在路径](#1-get_script_directory读取当前文件所在路径)
+      - [2. read\_args()：读取指定路径下名为“args.txt”的文件并返回其键值对应的字典](#2-read_args读取指定路径下名为argstxt的文件并返回其键值对应的字典)
+      - [3. delete\_files\_starting\_with()：删除路径内拥有指定前缀的所有文件](#3-delete_files_starting_with删除路径内拥有指定前缀的所有文件)
+      - [4. read\_xls()：查找当前脚本所在目录中的 Excel 文件并将其读取为 DataFrame](#4-read_xls查找当前脚本所在目录中的-excel-文件并将其读取为-dataframe)
 
 ## 项目结构
 确保项目结构如下：
@@ -297,8 +302,9 @@ def in_transit(driver):
 
 ```
 - `in_transit(driver)`：依次操作浏览器点击“Shipment”选项，在进入页面后点击网页左侧目录的“In Transit"选项，最后点击下拉目录中的“All”选项，调出所有在途退货单数据。  
-
 </details>
+
+_________________
 
 #### 3. advanced_search()：在高级检索中输入收件人地址筛选退货单
 <details>
@@ -390,3 +396,126 @@ _________________
 
 _________________
 
+### search.py
+用于检索并清除当前路径内上一次执行生成的文件并返回结果，每次执行程序时都会重新启动。其内部函数说明如下：
+
+#### 1. get_script_directory()：读取当前文件所在路径
+<details>
+  <summary>展开查看代码</summary>
+
+```python
+def get_script_directory():
+    return os.path.dirname(os.path.abspath(__file__))
+```
+- `get_script_directory()`：读取当前文件所在的绝对路径
+</details>
+
+_________________
+
+#### 2. read_args()：读取指定路径下名为“args.txt”的文件并返回其键值对应的字典
+<details>
+  <summary>展开查看代码</summary>
+
+```python
+def read_args(file_path = None):
+    if file_path is None:
+        file_path = os.path.join(get_script_directory(), 'args.txt')
+    params = {}
+    with open(file_path, 'r') as file:
+        for line in file:
+            line = line.strip()
+            if line:
+                key, value = line.split(' = ', 1)
+                params[key] = value
+    return params 
+```
+- `read_args(file_path = None)`：指定默认文件路径为当前所在文件夹 + 'args.txt'，返回字典。其效果如下：
+```
+# 原args.txt文件如下
+shipout_url = https://wms.shipout.com/z/#/login?lang=en
+
+shipout_username = support@carrohome.com
+
+shipout_password = Carrohome#23
+
+ezeeship_url = https://ezeeship.com/newstyle/#/accredit/login
+
+ezeeship_username = jacksoneatvivi@gmail.com
+
+ezeeship_password = Carrohome#1
+
+ezeeship_recipient_address = 1037
+
+# 调用read_args()后返回如下字典：
+{
+    'shipout_url': 'https://wms.shipout.com/z/#/login?lang=en', 'shipout_username': 'support@carrohome.com', 
+    'shipout_password': 'Carrohome#23', 
+    'ezeeship_url': 'https://ezeeship.com/newstyle/#/accredit/login', 
+    'ezeeship_username': 'jacksoneatvivi@gmail.com', 'ezeeship_password': 'Carrohome#1', 
+    'ezeeship_recipient_address': '1037'
+
+}
+
+```
+</details>
+
+_________________
+
+#### 3. delete_files_starting_with()：删除路径内拥有指定前缀的所有文件
+<details>
+  <summary>展开查看代码</summary>
+
+```python
+def delete_files_starting_with(prefix):
+
+    # 获取当前脚本所在目录
+    directory = get_script_directory() 
+   
+    try:
+        # 查找所有以指定前缀开头的文件
+        files_to_delete = [filename for filename in os.listdir(directory) if filename.startswith(prefix)]
+        
+        if files_to_delete:
+            # 删除找到的文件
+            for filename in files_to_delete:
+                os.remove(os.path.join(directory, filename))
+                print(f"已删除文件: {filename}")
+        else:
+            print(f"并未找到以 '{prefix}'为前缀的文件，删除终止")
+
+    except OSError as e:
+        print(f"Error: {e.strerror}")
+```
+- `delete_files_starting_with(prefix)`：是删除当前脚本所在目录中以指定前缀开头的文件。
+  - `prefix`：指定前缀示例：EzeeShip文件前缀为“Shipment_Information(by order)(all)”，Shipout文件前缀为“WMS_Return_Export”。
+
+</details>
+
+_________________
+
+#### 4. read_xls()：查找当前脚本所在目录中的 Excel 文件并将其读取为 DataFrame
+<details>
+  <summary>展开查看代码</summary>
+
+```python
+
+def read_xls(prefix):
+    directory = get_script_directory()
+
+    # 遍历目录中的所有文件名，查找以指定前缀 prefix 开头的文件
+    file_to_read = next((filename for filename in os.listdir(directory) if filename.startswith(prefix)), None)
+    
+    if file_to_read: # 如果找到匹配的文件
+        file_path = os.path.join(directory, file_to_read) # 构建文件的完整路径
+        # 读取 Excel 文件，将其内容加载到一个 DataFrame 中。header=0 表示将第一行作为列名。
+        df = pd.read_excel(file_path, header=0)
+        return df
+    else:
+        print(f"未找到以 '{prefix}'为前缀的文件名")
+        return None
+```
+- `read_xls(prefix)`：根据指定的前缀查找当前脚本所在目录中的 Excel 文件，并将其读取为 DataFrame。
+  - `prefix`：指定文件前缀名，如`prefix = 产品`，则所有开头带有“产品”二字的Excel文件都将会被提取。
+</details>
+
+_________________
