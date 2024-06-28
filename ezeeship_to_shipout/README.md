@@ -50,12 +50,11 @@ def wait_for_element(driver, selector, timeout=10):
         print("访问超时")
 ```
 
-</details>
-
 - `wait_for_element(driver, selector, timeout)`：创建一个WebDriverWait对象，用于在指定的时间内等待某个条件的发生。
   -  `driver`：这是一个WebDriver实例，通常用于控制浏览器。
   -  `selector`: 这是一个选择器，告诉Selenium需要在页面上找到哪个元素以及如何找到它。
   - `timeout`：这是等待该元素出现的最长时间，如果未能等到该元素加载完成，将会抛出超时异常。
+</details>
 
 #### 2. wait_until_visible()
 
