@@ -1,6 +1,7 @@
 # 一键检索EzeeShip未登记退货单脚本使用说明
 本工具用于自动检索EzeeShip平台上的未登记至Shipout的在途退货单。以下是使用说明，包括运行脚本，安装依赖以及处理常见问题。
 
+
 - [一键检索EzeeShip未登记退货单脚本使用说明](#一键检索ezeeship未登记退货单脚本使用说明)
   - [项目结构](#项目结构)
   - [脚本文件说明](#脚本文件说明)
@@ -27,6 +28,8 @@
       - [4. read\_xls()：查找当前脚本所在目录中的 Excel 文件并将其读取为 DataFrame](#4-read_xls查找当前脚本所在目录中的-excel-文件并将其读取为-dataframe)
       - [5. check\_value()：查找已在EzeeShip表格但没有登记到Shipout表格的退货单编号](#5-check_value查找已在ezeeship表格但没有登记到shipout表格的退货单编号)
     - [main.py](#mainpy)
+      - [动图示例](#动图示例)
+    - [args.txt](#argstxt)
 
 
 ## 项目结构
@@ -634,4 +637,19 @@ if __name__ == "__main__":
   
   ```
   </details>
+
+_________________
+
+
+#### 动图示例
+以下为<u>**main.py**</u>的自动操作动图示例：
+<div style="text-align: center;">
+  <img src="main.py演示.gif" alt="main.py">
+</div>
+
+
+_________________
+
+### args.txt
+参数文件，用于脚本登录EzeeShip和Shipout时输入密码，进行高级检索等操作。依使用者自身信息进行修改。
 
