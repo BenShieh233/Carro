@@ -116,18 +116,30 @@ def page_login(driver, username, password, url):
     password_element.send_keys(password)
 
     try:
-        # 找到并点击登录按钮
         button = wait_for_element(driver, (By.CSS_SELECTOR, '.ez-button.login-submit.ez-button--primary.ez-button--medium'))
         button.click()
         print("已成功登录Shipout")
-    except:
-        # 登录失败处理
-        print("Shipout账号或密码输入错误，请重新输入")
+
+    except Exception as e:
+        print(f"Shipout账号或密码输入错误，请重新输入。错误信息：{e}")
         driver.quit()
 
     # 选择仓库
-    warehouse_element = wait_for_element(driver, (By.XPATH, '//div[contains(text(), "Upland，CA")]'))
-    warehouse_element.click()
+    retries = 5
+    while retries > 0:
+        try:
+            warehouse_element = wait_until_located(driver, (By.XPATH, '//div[contains(text(), "Upland，CA")]'))
+            warehouse_element.click()
+            print("Shipout - 已成功进入仓库页面：“Upland Warehouse”")
+            break
+        except StaleElementReferenceException as e:
+            print(f"Shipout - 未能锁定该页面，重试中。错误信息：{e}")
+            retries -= 1
+        except Exception as e:
+            print(f"Shipout - 未能锁定该页面。错误信息：{e}")
+            break
+    else:
+        print("Shipout - 无法定位仓库页面，跳过此步骤")
 
     # 展开子菜单并跳转至“退货管理-退货单”页面
     max_retries = 10  # 最大重试次数

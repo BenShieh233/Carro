@@ -1,6 +1,7 @@
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-
+from IPython.display import display, Image
+import time
 
 def wait_for_element(driver, selector, timeout=10):
     try:
@@ -11,11 +12,17 @@ def wait_for_element(driver, selector, timeout=10):
     except Exception as e:
         print("访问超时")
     
-def wait_until_visible(driver, locator, timeout=10):
+def wait_until_located(driver, locator, timeout=10, freq = 0.5):
     try:
-        wait = WebDriverWait(driver, timeout)
-        element = wait.until(EC.visibility_of_element_located(locator))
+        wait = WebDriverWait(driver, timeout, freq)
+        element = wait.until(EC.presence_of_element_located(locator))
         return element
     
     except Exception as e:
         print("访问超时")
+
+def show_screen(driver):
+    timestamp = time.strftime("%Y%m%d-%H%M%S")
+    filename = f"screenshot_{timestamp}.png"
+    driver.save_screenshot(filename)
+    display(Image(filename))

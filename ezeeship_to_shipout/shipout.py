@@ -3,7 +3,8 @@ from selenium.webdriver.common.by import By
 import os
 import time
 from search import read_args
-from webdriver import wait_for_element, wait_until_visible
+from webdriver import wait_for_element, wait_until_located, show_screen
+from selenium.common.exceptions import StaleElementReferenceException
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 options = webdriver.ChromeOptions()
@@ -23,19 +24,33 @@ def page_login(driver, username, password, url):
     
     password_element = driver.find_element(By.XPATH, '//input[@type="password" and @autocomplete="off" and contains(@class, "ez-input__inner")]')
     password_element.send_keys(password)
-
     
     try:
         button = wait_for_element(driver, (By.CSS_SELECTOR, '.ez-button.login-submit.ez-button--primary.ez-button--medium'))
         button.click()
         print("已成功登录Shipout")
 
-    except:
-        print("Shipout账号或密码输入错误，请重新输入")
+    except Exception as e:
+        print(f"Shipout账号或密码输入错误，请重新输入。错误信息：{e}")
+        show_screen(driver)
         driver.quit()
     
-    warehouse_element = wait_for_element(driver, (By.XPATH, '//div[contains(text(), "Upland，CA")]'))
-    warehouse_element.click()
+    retries = 5
+    while retries > 0:
+        try:
+            warehouse_element = wait_until_located(driver, (By.XPATH, '//div[contains(text(), "Upland，CA")]'))
+            warehouse_element.click()
+            print("Shipout - 已成功进入仓库页面：“Upland Warehouse”")
+            break
+        except StaleElementReferenceException as e:
+            print(f"Shipout - 未能锁定该页面，重试中。错误信息：{e}")
+            retries -= 1
+        except Exception as e:
+            print(f"Shipout - 未能锁定该页面。错误信息：{e}")
+            show_screen(driver)
+            break
+    else:
+        print("Shipout - 无法定位仓库页面，跳过此步骤")
 
     # Click on the parent element to expand the submenu
     max_retries = 10
@@ -52,6 +67,7 @@ def page_login(driver, username, password, url):
         except:
             retries +=1
             print("Shipout - 当前页面请求失败，重试次数：", retries)
+            show_screen(driver)
             time.sleep(sleep_interval)
     else:
         print("Shipout - 页面请求已超时，请重新执行文件")
@@ -80,9 +96,10 @@ def export_table(driver):
             print("Shipout - 已选择“导出当前所有数据”")
             print("Shipout - 已导出退货单表格")
             break
-        except:
+        except Exception as e:
             retries +=1
-            print("Shipout - 请求失败，正在尝试重新下载表格，重试次数：", retries)
+            print(f"Shipout - 请求失败，正在尝试重新下载表格，重试次数：{retries}。错误信息：{e}")
+            show_screen(driver)
             time.sleep(sleep_interval)
     else:
         print("Shipout - 页面请求已超时，请重新执行文件")   
@@ -124,6 +141,6 @@ def shipout_driver():
 
     driver.quit()
 
-if __name__ == "__main__":
-    shipout_driver()
+# if __name__ == "__main__":
+#     shipout_driver()
 
